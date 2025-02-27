@@ -3,7 +3,7 @@ package org.example.problems2backend.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -38,8 +38,26 @@ public class GlobalExceptionHandler
 
         Set<Class<?>> unprocessableEntityEx = Set.of(
                 InvalidPasswordFormatException.class,
-                InvalidUsernameFormatException.class
+                InvalidUsernameFormatException.class,
+                InvalidAnswerFormatException.class
         );
+
+        Set<Class<?>> notFoundEx = Set.of(
+                QuizNotFoundException.class,
+                QuizResultNotFoundException.class,
+                UsernameNotFoundException.class
+        );
+
+        Set<Class<?>> conflictEx = Set.of(
+                QuestionContentException.class,
+                InvalidQuizStateException.class
+        );
+
+        Set<Class<?>> internalServerEx = Set.of(
+                InternalServerErrorException.class
+        );
+
+
 
 
 
@@ -51,6 +69,12 @@ public class GlobalExceptionHandler
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         else if (unprocessableEntityEx.contains(currentExceptionClass))
             return new ResponseEntity<>(response, HttpStatus.UNPROCESSABLE_ENTITY);
+        else if (notFoundEx.contains(currentExceptionClass))
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        else if (conflictEx.contains(currentExceptionClass))
+            return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+        else if (internalServerEx.contains(currentExceptionClass))
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         // TODO: add more else statements
 
 

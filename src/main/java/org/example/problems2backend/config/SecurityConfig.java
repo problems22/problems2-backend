@@ -42,6 +42,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/user/refresh-token").permitAll()
                         .requestMatchers("/api/users/user/change-password").permitAll()
                         .requestMatchers("/api/quizzes").permitAll()
+                        .requestMatchers("/api/quizzes/stats").permitAll()
+                        .requestMatchers("/api/quizzes/quiz/start/**").permitAll()
+                        .requestMatchers("/api/quizzes/quiz/stop/**").permitAll()
+                        .requestMatchers("/api/quizzes/quiz/questions/**").permitAll()
+                        .requestMatchers("/api/quizzes/quiz/answer/submit/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

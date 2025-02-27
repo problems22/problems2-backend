@@ -9,7 +9,7 @@ import org.example.problems2backend.exceptions.InvalidUsernameFormatException;
 import org.example.problems2backend.models.User;
 import org.example.problems2backend.repositories.UserRepository;
 import org.example.problems2backend.requests.AuthReq;
-import org.example.problems2backend.requests.PasswordChangeRequest;
+import org.example.problems2backend.requests.PasswordChangeReq;
 import org.example.problems2backend.service.JwtService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -487,7 +487,7 @@ public class UserControllerTest {
                 .andExpect(status().isCreated());
 
         // Change password
-        PasswordChangeRequest passwordChangeRequest = PasswordChangeRequest.builder()
+        PasswordChangeReq passwordChangeRequest = PasswordChangeReq.builder()
                 .username("passwordChangeTest")
                 .oldPassword("TestPassword123")
                 .newPassword("NewTestPassword123")
@@ -524,7 +524,7 @@ public class UserControllerTest {
                 .andExpect(status().isCreated());
 
         // Attempt to change password with wrong old password
-        PasswordChangeRequest passwordChangeRequest = PasswordChangeRequest.builder()
+        PasswordChangeReq passwordChangeRequest = PasswordChangeReq.builder()
                 .username("passwordChangeTest2")
                 .oldPassword("WrongPassword123")
                 .newPassword("NewTestPassword123")
@@ -553,7 +553,7 @@ public class UserControllerTest {
                 .andExpect(status().isCreated());
 
         // Attempt to change password with invalid new password
-        PasswordChangeRequest passwordChangeRequest = PasswordChangeRequest.builder()
+        PasswordChangeReq passwordChangeRequest = PasswordChangeReq.builder()
                 .username("passwordChangeTest3")
                 .oldPassword("TestPassword123")
                 .newPassword("weak")

@@ -11,6 +11,12 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubmitAnswersReq {
-    private List<AnswerReq> answers;
+public class AnswerReq {
+
+    private String questionId;
+    private String type;
+    private Integer selectedOption;
+    private String correctAnswer;
+    private List<Integer> correctOptions;
+
 }

@@ -52,6 +52,7 @@ public class User
     @Builder.Default
     private Integer weeklyPoints = 0;
 
+
     @Data
     @Builder
     @NoArgsConstructor

@@ -2,15 +2,30 @@ package org.example.problems2backend.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.problems2backend.exceptions.*;
+import org.example.problems2backend.models.QuizResult;
 import org.example.problems2backend.models.User;
+import org.example.problems2backend.repositories.QuizRepository;
+import org.example.problems2backend.repositories.QuizResultRepository;
 import org.example.problems2backend.repositories.UserRepository;
+import org.example.problems2backend.repositories.projections.UserPointsProjection;
+import org.example.problems2backend.repositories.projections.UserRankProjection;
+import org.example.problems2backend.repositories.projections.UserWeeklyRankProject;
+import org.example.problems2backend.responses.LeaderboardRes;
 import org.example.problems2backend.responses.AuthRes;
+import org.example.problems2backend.responses.QuizContentRes;
+import org.example.problems2backend.responses.QuizResultRes;
 import org.example.problems2backend.responses.UserProfileRes;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +35,8 @@ public class UserService
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final QuizResultRepository quizResultRepository;
+    private final QuizRepository quizRepository;
 
     public AuthRes register(String username, String password) {
 
@@ -45,7 +62,7 @@ public class UserService
                 .builder()
                 .username(username)
                 .passwordHash(passwordEncoder.encode(password)) // encoded password
-                .avatar("https://api.dicebear.com/8.x/pixel-art/png?seed=" + username + password) // randomly generated with seed
+                .avatar("https://api.dicebear.com/8.x/pixel-art/png?seed=" + username) // randomly generated with seed
                 .build();
 
         userRepository.save(user);
@@ -186,7 +203,96 @@ public class UserService
     }
 
 
-    public UserProfileRes getProfile(User user) {
-        return null;
+    public UserProfileRes getUserProfile(String username) {
+        // Fetch basic user information
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("username not found"));
+
+        UserProfileRes userProfileRes = UserProfileRes.builder().build();
+
+        userProfileRes.setUsername(user.getUsername());
+        userProfileRes.setRole(user.getRole());
+        userProfileRes.setAvatar(user.getAvatar());
+        userProfileRes.setMemberSince(user.getMemberSince());
+        userProfileRes.setRankPoints(user.getRankPoints());
+        userProfileRes.setRankTitle(user.getTitle());
+        userProfileRes.setIsBanned(user.getIsBanned());
+        userProfileRes.setStats(user.getStats());
+        userProfileRes.setWeeklyPoints(user.getWeeklyPoints());
+
+        // Fetch quiz results for the user
+        List<QuizResult> quizResults = quizResultRepository.findByUserIdOrderBySubmissionDateDesc(user.getId(), PageRequest.of(0, 10));
+        userProfileRes.setRecentResults(quizResults.stream().map(el -> QuizResultRes.builder()
+                .quizId(el.getQuizId().toString())
+                .userId(el.getUserId().toString())
+                .timeTaken(el.getTimeTaken())
+                .content(el.getContent().stream().map(e -> QuizContentRes.builder()
+                        .questionId(e.getQuestionId().toString())
+                        .correct(e.isCorrect())
+                        .build()).toList())
+                .obtainedPoints(el.getObtainedPoints())
+                .submissionDate(el.getSubmissionDate())
+                .build()).toList());
+
+        // Calculate average points per quiz
+        double averagePointsPerQuiz = quizResults.isEmpty() ? 0 : (double) (userProfileRes.getRankPoints()) / quizResults.size();
+        userProfileRes.setAveragePointsPerQuiz(averagePointsPerQuiz);
+
+        // Calculate total time taken for all quizzes
+        int totalTimeTaken = quizResults.stream().mapToInt(QuizResult::getTimeTaken).sum();
+        userProfileRes.setTotalTimeTaken(totalTimeTaken);
+
+        // Calculate average time taken per quiz
+        double averageTimeTaken = quizResults.isEmpty() ? 0 : (double) totalTimeTaken / quizResults.size();
+        userProfileRes.setAverageTimeTaken(averageTimeTaken);
+
+        // Calculate the number of correct and incorrect answers
+        int totalCorrectAnswers = user.getStats().getCorrectAnswers();
+        int totalIncorrectAnswers = user.getStats().getIncorrectAnswers();
+
+        // Calculate the accuracy rate
+        double accuracyRate = (totalCorrectAnswers + totalIncorrectAnswers) == 0 ? 0 :
+                (double) totalCorrectAnswers / (totalCorrectAnswers + totalIncorrectAnswers) * 100;
+        userProfileRes.setAccuracyRate(accuracyRate);
+
+        // Calculate the number of quizzes taken by difficulty level
+        Map<String, Long> quizzesByDifficulty = quizResults.stream()
+                .collect(Collectors.groupingBy(result -> quizRepository.findDifficultyById(result.getQuizId().toString()).getDifficulty(), Collectors.counting()));
+        userProfileRes.setQuizzesByDifficulty(quizzesByDifficulty);
+
+
+        // Calculate the number of quizzes taken over time
+        Map<LocalDateTime, Long> quizzesOverTime = quizResults.stream()
+                .collect(Collectors.groupingBy(QuizResult::getSubmissionDate, Collectors.counting()));
+        userProfileRes.setQuizzesOverTime(quizzesOverTime);
+
+        // Calculate the user's rank title based on total points
+        User.RankTitle rankTitle = User.RankTitle.getTitleByPoints(user.getRankPoints());
+        userProfileRes.setRankTitle(rankTitle);
+
+        // Calculate the progress towards the next rank
+        int nextRankPoints = rankTitle.ordinal() < User.RankTitle.values().length - 1 ?
+                User.RankTitle.values()[rankTitle.ordinal() + 1].getRequiredPoints() : rankTitle.getRequiredPoints();
+        userProfileRes.setNextRankPoints(nextRankPoints);
+
+        int progressTowardsNextRank = Math.max(0, nextRankPoints - user.getRankPoints());
+        userProfileRes.setProgressTowardsNextRank(progressTowardsNextRank);
+
+        return userProfileRes;
+    }
+
+    public LeaderboardRes getLeaderboard(User user)
+    {
+
+        Map<String, Integer> rank = userRepository.findAllUsersWithRank().stream().collect(Collectors.toMap(UserRankProjection::getUsername, UserRankProjection::getRankPoints));
+        Map<String, Integer> weeklyRank = userRepository.findAllUsersWithWeeklyRank().stream().collect(Collectors.toMap(UserWeeklyRankProject::getUsername, UserWeeklyRankProject::getWeeklyPoints));
+        UserPointsProjection userPointsProjection = userRepository.findUsernameWithRankAndWeeklyRankPoints(user.getUsername());
+
+
+        return LeaderboardRes
+                .builder()
+                .rank(rank)
+                .weeklyRank(weeklyRank)
+                .userPoints(userPointsProjection)
+                .build();
     }
 }

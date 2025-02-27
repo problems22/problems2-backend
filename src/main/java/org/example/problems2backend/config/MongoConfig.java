@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import lombok.NonNull;
-import org.example.problems2backend.models.converters.ContentToDocumentConverter;
-import org.example.problems2backend.models.converters.DocumentToContentConverter;
+import org.example.problems2backend.models.converters.QuestionContentToDocumentConverter;
+import org.example.problems2backend.models.converters.QuestionDocumentToContentConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -41,8 +41,8 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
     @Bean
     public MongoCustomConversions customConversions(ObjectMapper objectMapper) {
         return new MongoCustomConversions(Arrays.asList(
-                new ContentToDocumentConverter(objectMapper),
-                new DocumentToContentConverter(objectMapper)
+                new QuestionContentToDocumentConverter(objectMapper),
+                new QuestionDocumentToContentConverter(objectMapper)
         ));
     }
 }

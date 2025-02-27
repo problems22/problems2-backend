@@ -40,7 +40,7 @@ public class Quiz {
     public static class Question
     {
         @Id
-        private String id;
+        private ObjectId id;
 
         @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
         @JsonSubTypes({
@@ -52,6 +52,7 @@ public class Quiz {
 
         public interface Content
         {
+
             String getQuestion();
             List<String> getOptions();
 
@@ -61,7 +62,13 @@ public class Quiz {
 
             List<Integer> getCorrectOptions();
 
+            ObjectId getId();
+
         }
+
+
+
+
 
         @Data
         @Builder
@@ -71,7 +78,7 @@ public class Quiz {
         public static class MultipleChoice implements Content {
 
             @Id
-            private String id;
+            private ObjectId id;
 
             private String question;
             private List<String> options;
@@ -95,13 +102,21 @@ public class Quiz {
 
             @Override
             public String getCorrectAnswer() {
-                throw new QuestionContentException("multiple choice question doesn't have correct answer attribute");
+                return null;
             }
 
             @Override
             public List<Integer> getCorrectOptions() {
-                throw new QuestionContentException("multiple choice question doesn't have correct options");
+                return null;
             }
+
+            @Override
+            public ObjectId getId()
+            {
+                return id;
+            }
+
+
         }
         @Data
         @Builder
@@ -111,7 +126,7 @@ public class Quiz {
         public static class FillInTheBlank implements Content {
 
             @Id
-            private String id;
+            private ObjectId id;
 
             private String question;
 
@@ -124,12 +139,12 @@ public class Quiz {
 
             @Override
             public List<String> getOptions() {
-                throw new QuestionContentException("fill in the blank question doesn't have options");
+                return null;
             }
 
             @Override
             public Integer getCorrectOption() {
-                throw new QuestionContentException("fill in the blank question doesn't have correct options");
+                return null;
             }
 
             @Override
@@ -139,8 +154,16 @@ public class Quiz {
 
             @Override
             public List<Integer> getCorrectOptions() {
-                throw new QuestionContentException("fill in the form doesn't have correct options");
+                return null;
             }
+
+            @Override
+            public ObjectId getId()
+            {
+                return id;
+            }
+
+
         }
         @Data
         @Builder
@@ -150,7 +173,7 @@ public class Quiz {
         public static class MultipleSelect implements Content {
 
             @Id
-            private String id;
+            private ObjectId id;
 
             private String question;
             private List<String> options;
@@ -169,18 +192,25 @@ public class Quiz {
 
             @Override
             public Integer getCorrectOption() {
-                throw new QuestionContentException("multiple select doesn't have correct option");
+                return null;
             }
 
             @Override
             public String getCorrectAnswer() {
-                throw new QuestionContentException("multiple select doesn't have correct answer");
+                return null;
             }
 
             @Override
             public List<Integer> getCorrectOptions() {
                 return correctOptions;
             }
+
+            @Override
+            public ObjectId getId()
+            {
+                return id;
+            }
+
         }
 
 

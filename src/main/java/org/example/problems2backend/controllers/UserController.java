@@ -6,8 +6,8 @@ import lombok.AllArgsConstructor;
 import org.example.problems2backend.exceptions.InvalidRefreshTokenException;
 import org.example.problems2backend.models.User;
 import org.example.problems2backend.requests.AuthReq;
-import org.example.problems2backend.requests.PasswordChangeRequest;
-import org.example.problems2backend.requests.RefreshTokenReq;
+import org.example.problems2backend.responses.LeaderboardRes;
+import org.example.problems2backend.requests.PasswordChangeReq;
 import org.example.problems2backend.responses.AuthRes;
 import org.example.problems2backend.responses.UserProfileRes;
 import org.example.problems2backend.service.UserService;
@@ -19,7 +19,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
-import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/users")
@@ -96,7 +95,7 @@ public class UserController {
     }
 
     @PostMapping("/user/change-password")
-    public ResponseEntity<Void> changePassword(@RequestBody PasswordChangeRequest passwordChangeRequest) {
+    public ResponseEntity<Void> changePassword(@RequestBody PasswordChangeReq passwordChangeRequest) {
         userService.changePassword(passwordChangeRequest.getUsername(),
                 passwordChangeRequest.getOldPassword(),
                 passwordChangeRequest.getNewPassword());
@@ -131,7 +130,22 @@ public class UserController {
     @GetMapping("/user/profile")
     public ResponseEntity<UserProfileRes> getProfile(@AuthenticationPrincipal User user)
     {
-        UserProfileRes userProfileRes = userService.getProfile(user);
+        UserProfileRes userProfileRes = userService.getUserProfile(user.getUsername());
+        return new ResponseEntity<>(userProfileRes, HttpStatus.OK);
+    }
+
+    @GetMapping("/user/leaderboard")
+    public ResponseEntity<LeaderboardRes> getLeaderboard(@AuthenticationPrincipal User user)
+    {
+        LeaderboardRes leaderboardRes = userService.getLeaderboard(user);
+        return new ResponseEntity<>(leaderboardRes, HttpStatus.OK);
+    }
+
+    @GetMapping("/user/leaderboard/profile/{username}")
+    public ResponseEntity<UserProfileRes> getUserLeaderboardProfile(@PathVariable String username)
+    {
+        UserProfileRes userProfileRes = userService.getUserProfile(username);
+        userProfileRes.setRecentResults(null);
         return new ResponseEntity<>(userProfileRes, HttpStatus.OK);
     }
 

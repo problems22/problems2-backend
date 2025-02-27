@@ -23,10 +23,18 @@ public class UserProfileRes
     private String avatar;
     private LocalDateTime memberSince;
     private Integer rankPoints;
-    private User.RankTitle title;
     private Boolean isBanned;
     private User.Stats stats;
     private Integer weeklyPoints;
-    private List<QuizResult> recentResults;
+    private List<QuizResultRes> recentResults;
+    private Double averagePointsPerQuiz;
+    private Integer totalTimeTaken;
+    private Double averageTimeTaken;
+    private Double accuracyRate;
+    private Map<String, Long> quizzesByDifficulty;
+    private Map<LocalDateTime, Long> quizzesOverTime;
+    private User.RankTitle rankTitle;
+    private Integer nextRankPoints;
+    private Integer progressTowardsNextRank;
 
 }

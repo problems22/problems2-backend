@@ -10,6 +10,7 @@ import org.bson.types.ObjectId;
 import org.example.problems2backend.models.Quiz;
 import org.example.problems2backend.models.QuizResult;
 import org.example.problems2backend.models.User;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -42,12 +43,35 @@ public class Main {
         }
     }
 
+    private static void insertData(MongoDatabase database, List<User> users, List<Quiz> quizzes,
+                                   List<QuizResult> results) {
+        // Insert users
+        List<Document> userDocuments = users.stream()
+                .map(Main::convertUserToDocument)
+                .collect(Collectors.toList());
+        database.getCollection("users").insertMany(userDocuments);
+
+        // Insert quizzes
+        List<Document> quizDocuments = quizzes.stream()
+                .map(Main::convertQuizToDocument)
+                .collect(Collectors.toList());
+        database.getCollection("quizzes").insertMany(quizDocuments);
+
+        // Insert results
+        List<Document> resultDocuments = results.stream()
+                .map(Main::convertQuizResultToDocument)
+                .collect(Collectors.toList());
+        database.getCollection("quiz_results").insertMany(resultDocuments);
+
+    }
+
     private static List<User> generateUsers(int count) {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         return IntStream.range(0, count)
                 .mapToObj(i -> User.builder()
                         .id(new ObjectId())
                         .username(faker.name().username())
-                        .passwordHash(faker.crypto().md5())
+                        .passwordHash(encoder.encode("Dfa1c831b1!"))
                         .role(faker.random().nextBoolean() ? "USER" : "ADMIN")
                         .avatar(faker.internet().avatar())
                         .memberSince(LocalDateTime.now().minusDays(faker.number().numberBetween(1, 365)))
@@ -95,7 +119,7 @@ public class Main {
     private static List<Quiz.Question> generateQuestions() {
         return IntStream.range(0, faker.number().numberBetween(5, 15))
                 .mapToObj(i -> Quiz.Question.builder()
-                        .id(UUID.randomUUID().toString())
+                        .id(new ObjectId())
                         .content(generateQuestionContent())
                         .build())
                 .collect(Collectors.toList());
@@ -120,7 +144,7 @@ public class Main {
                 .collect(Collectors.toList());
 
         return Quiz.Question.MultipleChoice.builder()
-                .id(UUID.randomUUID().toString())
+                .id(new ObjectId())
                 .question(faker.lorem().sentence())
                 .options(options)
                 .correctOption(faker.number().numberBetween(0, options.size()))
@@ -129,7 +153,7 @@ public class Main {
 
     private static Quiz.Question.FillInTheBlank generateFillInTheBlank() {
         return Quiz.Question.FillInTheBlank.builder()
-                .id(UUID.randomUUID().toString())
+                .id(new ObjectId())
                 .question(faker.lorem().sentence())
                 .correctAnswer(faker.lorem().word())
                 .build();
@@ -146,7 +170,7 @@ public class Main {
                 .collect(Collectors.toList());
 
         return Quiz.Question.MultipleSelect.builder()
-                .id(UUID.randomUUID().toString())
+                .id(new ObjectId())
                 .question(faker.lorem().sentence())
                 .options(options)
                 .correctOptions(correctOptions)
@@ -181,25 +205,6 @@ public class Main {
                 .collect(Collectors.toList());
     }
 
-    private static void insertData(MongoDatabase database, List<User> users, List<Quiz> quizzes, List<QuizResult> results) {
-        // Insert users
-        List<Document> userDocuments = users.stream()
-                .map(Main::convertUserToDocument)
-                .collect(Collectors.toList());
-        database.getCollection("users").insertMany(userDocuments);
-
-        // Insert quizzes
-        List<Document> quizDocuments = quizzes.stream()
-                .map(Main::convertQuizToDocument)
-                .collect(Collectors.toList());
-        database.getCollection("quizzes").insertMany(quizDocuments);
-
-        // Insert results
-        List<Document> resultDocuments = results.stream()
-                .map(Main::convertQuizResultToDocument)
-                .collect(Collectors.toList());
-        database.getCollection("quiz_results").insertMany(resultDocuments);
-    }
 
     private static Document convertUserToDocument(User user) {
         return new Document()
@@ -284,4 +289,11 @@ public class Main {
                                 .append("isCorrect", c.isCorrect()))
                         .collect(Collectors.toList()));
     }
+
+
+
+
+
+
+
 }

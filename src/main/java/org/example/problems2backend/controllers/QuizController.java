@@ -2,13 +2,9 @@ package org.example.problems2backend.controllers;
 
 
 import lombok.AllArgsConstructor;
-import org.example.problems2backend.models.QuizResult;
 import org.example.problems2backend.models.User;
-import org.example.problems2backend.requests.SubmitAnswerReq;
 import org.example.problems2backend.requests.SubmitAnswersReq;
-import org.example.problems2backend.responses.QuizDetailsRes;
-import org.example.problems2backend.responses.QuizzesRes;
-import org.example.problems2backend.responses.QuizzesStatsRes;
+import org.example.problems2backend.responses.*;
 import org.example.problems2backend.service.QuizService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,35 +50,34 @@ public class QuizController {
     }
 
 
-
-    @GetMapping("/quiz/result/{quizId}")
-    public ResponseEntity<QuizResult> getQuizResult(@PathVariable String quizId, @AuthenticationPrincipal User user)
-    {
-        QuizResult quizResult = quizService.getQuizResult(quizId, user);
-        return new ResponseEntity<>(quizResult, HttpStatus.OK);
-    }
-
     @PostMapping("/quiz/start/{quizId}")
-    public ResponseEntity<Void> startQuiz(@PathVariable String quizId, @AuthenticationPrincipal User user)
+    public ResponseEntity<StartQuizRes> startQuiz(@PathVariable String quizId, @AuthenticationPrincipal User user)
     {
-        quizService.startQuiz();
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        StartQuizRes startQuizRes = quizService.startQuiz(quizId, user);
+        return new ResponseEntity<>(startQuizRes, HttpStatus.CREATED);
     }
 
-    @PostMapping("/quiz/answers/submit/{quizId}")
-    public ResponseEntity<Void> submitAnswers(@PathVariable String quizId, @RequestBody SubmitAnswersReq submitAnswersReq, @AuthenticationPrincipal User user)
+
+    @PostMapping("/quiz/stop/{quizId}")
+    public ResponseEntity<Void> stopQuiz(@PathVariable String quizId, @AuthenticationPrincipal User user)
     {
-        quizService.submitAnswers(quizId, submitAnswersReq, user);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        quizService.stopQuiz(quizId, user);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
+
 
     @PostMapping("/quiz/answer/submit/{quizId}")
-    public ResponseEntity<Boolean> submitAnswer(@PathVariable String quizId, @RequestBody SubmitAnswerReq submitAnswerReq, @AuthenticationPrincipal User user)
+    public ResponseEntity<QuizResultRes> submitAnswer(@PathVariable String quizId, @RequestBody SubmitAnswersReq submitAnswerReq, @AuthenticationPrincipal User user)
     {
         return new ResponseEntity<>(quizService.submitAnswer(quizId, submitAnswerReq, user), HttpStatus.CREATED);
     }
 
-
+    @GetMapping("/quiz/questions/{quizId}")
+    public ResponseEntity<StartQuizRes> getQuestions(@PathVariable String quizId)
+    {
+        StartQuizRes startQuizRes = quizService.getQuestions(quizId);
+        return new ResponseEntity<>(startQuizRes, HttpStatus.OK);
+    }
 
 
 

@@ -32,7 +32,7 @@ public class QuizResult
     @AllArgsConstructor
     @Builder
     public static class Content {
-        private String questionId;
+        private ObjectId questionId;
         private boolean isCorrect;
     }
 
